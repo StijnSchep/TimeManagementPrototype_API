@@ -1,0 +1,30 @@
+image: node:latest
+
+stages:
+  - test
+  - deploy
+
+testing:
+  image: markhobson/node-chrome:latest
+  stage: test
+  services:
+    - docker:dind
+  variables:
+    NODE_ENV: development
+  before_script:
+    - npm install --no-optional
+  script:
+    - npm run test
+    - npm run sonar
+
+production:
+  type: deploy
+  stage: deploy
+  image: ruby:latest
+  script:
+    - apt-get update -qy
+    - apt-get install -y ruby-dev
+    - gem install dpl
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_API_KEY
+  only:
+    - master
